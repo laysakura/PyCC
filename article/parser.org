@@ -1,0 +1,85 @@
+* 文法
+program :=
+definition* end-of-file
+
+definition :=
+  function-definition
+
+function-definition :=
+  type-expression identifier '(' parameter-list ')' compound-statement
+
+parameter-list :=
+    EPSILON
+  | parameter ( , parameter )*
+
+parameter :=
+  type-expression identifier
+
+type-expression :=
+  int 
+
+----------------------------------------------
+statement :=
+    ';'
+  | continue ';'
+  | break ';'
+  | return expression ';'
+  | compound-statement
+  | if-statement
+  | while-statement
+  | expression ';'
+
+compound-statement :=
+  '{' var-declaration* statement* '}'
+
+var-declaration :=
+  type-expression identifier ';'
+
+if-statement :=
+  if '(' expression ')' statement ( else statement )?
+
+while-statement :=
+  while '(' expression ')' statement
+
+----------------------------------------------
+
+expression :=
+  equality-expression ( = expression )?
+
+equality-expression :=
+  relational-expression ( equality-operator relational-expression )*
+
+equality-operator: one of
+  == != 
+
+relational-expression :=
+  additive-expression ( relational-operator additive-expression )*
+
+relational-operator: one of
+  < > <= >=
+
+additive-expression :=
+  multiplicative-expression ( additive-operator multiplicative-expression )*
+
+additive-operator: one of
+  + - 
+
+multiplicative-expression :=
+  unary-expression ( multiplicative-operator unary-expression )*
+
+multiplicative-operator: one of 
+  * / %
+
+unary-expression :=
+   int-literal
+ | identifier ( '(' argument-expression-list ')' )?
+ | '(' expression ')'
+ | unary-operator unary-expression
+
+unary-operator: one of
+  + - !
+
+argument-expression-list :=
+   EPSILON
+ | expression ( , expression )*
+

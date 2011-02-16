@@ -18,115 +18,116 @@ def _gen_tokens_per_line(line):
         # keywords
         if p_break.match(unread):
             unread = unread[len("break"): ].strip()
-            yield "break", "TOK_BREAK"
+            yield {"token": "break", "tok_kind": "TOK_BREAK"}
         elif p_continue.match(unread):
             unread = unread[len("continue"): ].strip()
-            yield "continue", "TOK_CONTINUE"
+            yield {"token": "continue", "tok_kind": "TOK_CONTINUE"}
         elif p_else.match(unread):
             unread = unread[len("else"): ].strip()
-            yield "else", "TOK_ELSE"
+            yield {"token": "else", "tok_kind": "TOK_ELSE"}
         elif p_if.match(unread):
             unread = unread[len("if"): ].strip()
-            yield "if", "TOK_IF"
+            yield {"token": "if", "tok_kind": "TOK_IF"}
         elif p_int.match(unread):
             unread = unread[len("int"): ].strip()
-            yield "int", "TOK_INT"
+            yield {"token": "int", "tok_kind": "TOK_INT"}
         elif p_return.match(unread):
             unread = unread[len("return"): ].strip()
-            yield "return", "TOK_RETURN"
+            yield {"token": "return", "tok_kind": "TOK_RETURN"}
         elif p_while.match(unread):
             unread = unread[len("while"): ].strip()
-            yield "while", "TOK_WHILE"
+            yield {"token": "while", "tok_kind": "TOK_WHILE"}
 
         # symboles
         elif common.startwith(unread, "("):
             unread = unread[len("("): ].strip()
-            yield "(", "TOK_LPAREN"
+            yield {"token": "(", "tok_kind": "TOK_LPAREN"}
         elif common.startwith(unread, ")"):
             unread = unread[len(")"): ].strip()
-            yield ")", "TOK_RPAREN"
+            yield {"token": ")", "tok_kind": "TOK_RPAREN"}
         elif common.startwith(unread, "{"):
             unread = unread[len("{"): ].strip()
-            yield "{", "TOK_LBRACE"
+            yield {"token": "{", "tok_kind": "TOK_LBRACE"}
         elif common.startwith(unread, "}"):
             unread = unread[len("}"): ].strip()
-            yield "}", "TOK_RBRACE"
+            yield {"token": "}", "tok_kind": "TOK_RBRACE"}
         elif common.startwith(unread, "*"):
             unread = unread[len("*"): ].strip()
-            yield "*", "TOK_MUL"
+            yield {"token": "*", "tok_kind": "TOK_MUL"}
         elif common.startwith(unread, "+"):
             unread = unread[len("+"): ].strip()
-            yield "+", "TOK_PLUS"
+            yield {"token": "+", "tok_kind": "TOK_PLUS"}
         elif common.startwith(unread, "-"):
             unread = unread[len("-"): ].strip()
-            yield "-", "TOK_MINUS"
+            yield {"token": "-", "tok_kind": "TOK_MINUS"}
         elif common.startwith(unread, "/"):
             unread = unread[len("/"): ].strip()
-            yield "/", "TOK_DIV"
+            yield {"token": "/", "tok_kind": "TOK_DIV"}
         elif common.startwith(unread, "%"):
             unread = unread[len("%"): ].strip()
-            yield "%", "TOK_REM"
+            yield {"token": "%", "tok_kind": "TOK_REM"}
         elif common.startwith(unread, "<="):
             unread = unread[len("<="): ].strip()
-            yield "<=", "TOK_LE"
+            yield {"token": "<=", "tok_kind": "TOK_LE"}
         elif common.startwith(unread, ">="):
             unread = unread[len(">="): ].strip()
-            yield ">=", "TOK_GE"
+            yield {"token": ">=", "tok_kind": "TOK_GE"}
         elif common.startwith(unread, "<"):
             unread = unread[len("<"): ].strip()
-            yield "<", "TOK_LT"
+            yield {"token": "<", "tok_kind": "TOK_LT"}
         elif common.startwith(unread, ">"):
             unread = unread[len(">"): ].strip()
-            yield ">", "TOK_GT"
+            yield {"token": ">", "tok_kind": "TOK_GT"}
         elif common.startwith(unread, "=="):
             unread = unread[len("=="): ].strip()
-            yield "==", "TOK_EQ"
+            yield {"token": "==", "tok_kind": "TOK_EQ"}
         elif common.startwith(unread, "!="):
             unread = unread[len("!="): ].strip()
-            yield "!=", "TOK_NEQ"
+            yield {"token": "!=", "tok_kind": "TOK_NEQ"}
         elif common.startwith(unread, "!"):
             unread = unread[len("!"): ].strip()
-            yield "!", "TOK_BANG"
+            yield {"token": "!", "tok_kind": "TOK_BANG"}
         elif common.startwith(unread, ";"):
             unread = unread[len(";"): ].strip()
-            yield ";", "TOK_SEMICOLON"
+            yield {"token": ";", "tok_kind": "TOK_SEMICOLON"}
         elif common.startwith(unread, "="):
             unread = unread[len("="): ].strip()
-            yield "=", "TOK_ASSIGN"
+            yield {"token": "=", "tok_kind": "TOK_ASSIGN"}
         elif common.startwith(unread, ","):
             unread = unread[len(","): ].strip()
-            yield ",", "TOK_COMMA"
+            yield {"token": ",", "tok_kind": "TOK_COMMA"}
 
         # int-literal
         elif p_int_literal.match(unread):
             literal = p_int_literal.match(unread).group()
             unread = unread[len(literal): ].strip()
-            yield literal, "TOK_INT_LITERAL"
+            yield {"token": literal, "tok_kind": "TOK_INT_LITERAL"}
 
         # id
         elif p_id.match(unread):
             identifier = p_id.match(unread).group()
             unread = unread[len(identifier): ].strip()
-            yield identifier, "TOK_ID"
+            yield {"token": identifier, "tok_kind": "TOK_ID"}
 
         else:
-            yield "INVALID", "INVALID"
+            yield {"token": "INVALID", "tok_kind": "INVALID"}
 
-def gen_tokenes(lines):
-    for linenum, line in enumerate(lines):
-        for token, tok_kind in _gen_tokens_per_line(line):
-            yield linenum + 1, token, tok_kind
+def gen_tokenes(stdin):
+    cur = {}
+    for linenum, line in enumerate(stdin):
+        for next in _gen_tokens_per_line(line):
+            if next["tok_kind"] == "INVALID":
+                sys.stderr.write("[Tokenize Error] L." + str(linenum) + ": Invalid token.\n")
+                exit(1)
+            next["linenum"] = linenum + 1
 
-def output_for_test(linenum, token, tok_kind):
-    if tok_kind == "TOK_INT_LITERAL" or tok_kind == "TOK_ID":
-        print(str(linenum) + ":" + tok_kind + " (" + token + ")")
-    else:
-        print(str(linenum) + ":" + tok_kind)
+            if cur == {}:
+                # get just first token
+                cur = next
+                continue
 
-if __name__ == "__main__":
-    program_lines = [line.strip('\n') for line in sys.stdin]
-    for linenum, token, tok_kind in gen_tokenes(program_lines):
-        if tok_kind == "INVALID":
-            sys.stderr.write("[Tokenize Error] L." + str(linenum) + ": Invalid token.\n")
-            exit(1)
-        output_for_test(linenum, token, tok_kind)
+            yield cur, next
+            cur = next
+
+    # no tokens left
+    yield cur, {"linenum": -1, "token": "[EOF]", "tok_kind": "TOK_EOF"}
