@@ -1,0 +1,39 @@
+* 使用するトークン
+
+** keywords (identifierの中で, 予約されているもの):
+*** break, continue, else, if, int, return, while
+**** そのまま記録(TOK_BREAKとか)
+
+** identifier: (以下の中でkeywords以外のもの)
+*** nondigit (nondigit|digit)*
+**** IDで，具体的にどんなIDかを記録 (TOK_ID:abcとか)
+
+** int-literal:
+*** digit+
+**** INT_LITERALで，具体的にどんな数値かを記録 (TOK_INT_LITERAL:44とか)
+
+以下，定義
+
+** nondigit: one of
+***  _ a b c d e f g h i j k l m
+     n o p q r s t u v w x y z
+     A B C D E F G H I J K L M
+     N O P Q R S T U V W X Y Z
+**** これは記録はしない．IDの定義として必要
+
+digit: one of
+  0 1 2 3 4 5 6 7 8 9
+
+TOKEN:
+  int-literal identifier keywords
+  ( ) { } * + - / % ! < > <= >= == != ; = ,  -> 個別に記録
+  end-of-file
+
+* 入力はstdinから
+
+* Cでは，1つのトークンが行をまたぐことはないので，1行ずつ読んでいくのは妥当
+
+* トークン同士の区切りは，[\n (半角スペース) \t] である．
+* 違った．上記3文字は，あるとしたら省くのが正解．区切りがない場合も普通にある．
+* startwithは順番に注意．'<='は'<'よりさきである必要がある
+* startwith("break")だと，"breakdown"とかも引っかかってだめ

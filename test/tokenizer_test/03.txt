@@ -1,0 +1,8 @@
+int fun(int x, int y, int z)
+{
+  if (x < y) break;
+  if (x > y) continue;
+  else while (!z < 10) {
+    z = x + y * x - z / x % 10;
+  }
+}

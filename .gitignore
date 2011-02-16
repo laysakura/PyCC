@@ -1,0 +1,14 @@
+*~
+*.py[oc]
+*#
+*.o
+*.a
+*.d
+*flymake*
+*.so
+*.bak
+*.aux
+*.dvi
+*.png
+*.log
+*.tex

@@ -1,0 +1,9 @@
+0 a 
+break continue else if int return while
+( ) { }
+* + - / % 
+!
+< > <= >= == !=
+;
+=
+,
