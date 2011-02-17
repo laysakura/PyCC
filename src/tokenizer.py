@@ -112,13 +112,12 @@ def _gen_tokens_per_line(line):
         else:
             yield {"token": "INVALID", "tok_kind": "INVALID"}
 
-def gen_tokenes(stdin):
+def gen_tokens(stdin):
     cur = {}
     for linenum, line in enumerate(stdin):
         for next in _gen_tokens_per_line(line):
             if next["tok_kind"] == "INVALID":
-                sys.stderr.write("[Tokenize Error] L." + str(linenum) + ": Invalid token.\n")
-                exit(1)
+                common.err_exit("[Tokenize Error] L." + str(linenum) + ": Invalid token.\n")
             next["linenum"] = linenum + 1
 
             if cur == {}:

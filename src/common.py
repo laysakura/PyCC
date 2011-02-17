@@ -1,3 +1,4 @@
+import sys
 import re
 
 def fully_match(pattern, string):
@@ -24,3 +25,7 @@ def startwith(string, pattern):
     startwith("hogefoobar", "foo")   -> False
     """
     return string.find(pattern) == 0
+
+def err_exit(err):
+    sys.stderr.write(err)
+    exit(1)

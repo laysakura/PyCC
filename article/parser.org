@@ -1,24 +1,27 @@
 * 文法
 program :=
-definition* end-of-file
+function-definition* end-of-file
 
-definition :=
-  function-definition
+# definition :=
+#   function-definition
 
 function-definition :=
-  type-expression identifier '(' parameter-list ')' compound-statement
+  int identifier '(' parameter-list ')' compound-statement
 
 parameter-list :=
     EPSILON
   | parameter ( , parameter )*
 
 parameter :=
-  type-expression identifier
+  int identifier
 
-type-expression :=
-  int 
+# type-expression :=
+#   int 
 
 ----------------------------------------------
+compound-statement :=
+  '{' var-declaration* statement* '}'
+
 statement :=
     ';'
   | continue ';'
@@ -29,11 +32,8 @@ statement :=
   | while-statement
   | expression ';'
 
-compound-statement :=
-  '{' var-declaration* statement* '}'
-
 var-declaration :=
-  type-expression identifier ';'
+  int identifier ';'
 
 if-statement :=
   if '(' expression ')' statement ( else statement )?
@@ -83,3 +83,14 @@ argument-expression-list :=
    EPSILON
  | expression ( , expression )*
 
+
+* 構文主導主義で，パースしていく間に中間言語と記号表を作る
+* parserはやっぱり状態機械．どこまでトークンを読んだという情報を元に動く．
+  だからclassが自然かな．
+* _parse*()は，全て自分の先頭のtokenをパースする．
+* パースエラーを出すのは，tokenを取ったときだけ
+* 各演算(multiplicative-expression, additive-exprssion)は，各々その計算結果
+  の入った一時変数に置き換えられる．
+  つまり，計算結果が早く出るように(早く集約するように)定義された
+  multiplicative-expression
+  の方が優先度を高く計算されていることになる．
