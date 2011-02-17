@@ -87,39 +87,43 @@ class Parser:
             common.err_exit("[Parse Error] L." + str(self.cur_tok["linenum"])
                             + "  Invalid statement.\n")
 
-        self.cur_tok, self.next_tok = next(self.tok_generator)
-
-        if self.cur_tok["tok_kind"] == "TOK_SEMICOLON":
+        if self.next_tok["tok_kind"] == "TOK_SEMICOLON":
+            self.cur_tok, self.next_tok = next(self.tok_generator)
             return
 
-        elif self.cur_tok["tok_kind"] == "TOK_CONTINUE":
+        elif self.next_tok["tok_kind"] == "TOK_CONTINUE":
+            self.cur_tok, self.next_tok = next(self.tok_generator)
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
             return
 
-        elif self.cur_tok["tok_kind"] == "TOK_BREAK":
+        elif self.next_tok["tok_kind"] == "TOK_BREAK":
+            self.cur_tok, self.next_tok = next(self.tok_generator)
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
             return
 
-        elif self.cur_tok["tok_kind"] == "TOK_RETURN":
+        elif self.next_tok["tok_kind"] == "TOK_RETURN":
+            self.cur_tok, self.next_tok = next(self.tok_generator)
+
             self._parse_expression()
+
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
             return
 
-        elif self.cur_tok["tok_kind"] == "TOK_LBRACE":
+        elif self.next_tok["tok_kind"] == "TOK_LBRACE":
             self._parse_compound_statement()
             return
 
-        elif self.cur_tok["tok_kind"] == "TOK_IF":
+        elif self.next_tok["tok_kind"] == "TOK_IF":
             self._parse_if_statement()
             return
 
-        elif self.cur_tok["tok_kind"] == "TOK_WHILE":
+        elif self.next_tok["tok_kind"] == "TOK_WHILE":
             self._parse_while_statement()
             return
 
@@ -157,7 +161,7 @@ class Parser:
             err_exit()
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
-        if self.cur_tok["tok_kind"] != "TOK_LPARENXS":
+        if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
 
         self._parse_expression()
@@ -182,7 +186,7 @@ class Parser:
             err_exit()
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
-        if self.cur_tok["tok_kind"] != "TOK_LPARENXS":
+        if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
 
         self._parse_expression()
