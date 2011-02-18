@@ -183,17 +183,31 @@ class Parser:
         if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
 
-        self._parse_equality()
+        test = self._parse_equality()
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_RPAREN":
             err_exit()
 
+        false_label = next(self.label_generator)
+        self.last_false_label = false_label
+        self.intcode.append({"label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+
         self._parse_statement()
 
         if self.next_tok["tok_kind"] == "TOK_ELSE":
+            fi_label = next(self.label_generator)
+            self.intcode.append({"label": "", "code": "goto " + fi_label["token"]})
+            self.intcode.append({"label": false_label["token"], "code": ""})
+
             self.cur_tok, self.next_tok = next(self.tok_generator) # parse 'else'
+
             self._parse_statement()
+
+            self.intcode.append({"label": fi_label["token"], "code": ""})
+
+        else:
+            self.intcode.append({"label": false_label["token"], "code": ""})
 
     def _parse_while_statement(self):
         def err_exit():
@@ -218,7 +232,8 @@ class Parser:
         false_label = next(self.label_generator)
         self.last_false_label = false_label
         self.last_test_label = test_label
-        self.intcode.append({"label": test_label["token"], "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+        self.intcode.append({"label": test_label["token"], "code": ""})
+        self.intcode.append({"label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
 
         self._parse_statement()
 
