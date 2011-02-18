@@ -10,6 +10,9 @@ class Parser:
         self.tmpvar_generator = (lambda : self._gen_unique_token(".t", "TOK_TMPVAR"))()
         self.label_generator = (lambda : self._gen_unique_token(".L", "TOK_LABEL"))()
 
+        self.last_test_label = {"linenum": -1, "token": "", "tok_kind": "TOK_LABEL"}
+        self.last_false_label = {"linenum": -1, "token": "", "tok_kind": "TOK_LABEL"}
+
         self.intcode = []
 
     def _gen_unique_token(self, prefix, tok_kind):
@@ -108,6 +111,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
+            self.intcode.append({"label": "", "code": "goto " + self.last_test_label["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_BREAK":
@@ -115,6 +119,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
+            self.intcode.append({"label": "", "code": "goto " + self.last_false_label["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_RETURN":
@@ -140,7 +145,7 @@ class Parser:
             return
 
         else:
-            code = self._parse_equality()
+            code = self._parse_equality()["token"]
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
@@ -203,13 +208,22 @@ class Parser:
         if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
 
-        self._parse_equality()
+        test = self._parse_equality()
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_RPAREN":
             err_exit()
 
+        test_label = next(self.label_generator)
+        false_label = next(self.label_generator)
+        self.last_false_label = false_label
+        self.last_test_label = test_label
+        self.intcode.append({"label": test_label["token"], "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+
         self._parse_statement()
+
+        self.intcode.append({"label": "", "code": "goto " + test_label["token"]})
+        self.intcode.append({"label": false_label["token"], "code": ""})
 
     def _parse_equality(self):
         l_rel = self._parse_rel()
@@ -219,7 +233,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             op = self.cur_tok["token"]
             r_rel = self._parse_rel()
-            return l_rel["token"] + ' ' + op + ' ' + r_rel["token"]
+            return {"linenum": -1, "token": l_rel["token"] + ' ' + op + ' ' + r_rel["token"], "tok_kind": "TOK_TEST"}
 
         else:
             # single rel
@@ -233,7 +247,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             op = self.cur_tok["token"]
             r_expression = self._parse_expression()
-            return l_expression["token"] + ' ' + op + ' ' + r_expression["token"]
+            return {"linenum": -1, "token": l_expression["token"] + ' ' + op + ' ' + r_expression["token"], "tok_kind": "TOK_TEST"}
 
         else:
             # single expression

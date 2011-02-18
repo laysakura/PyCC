@@ -24,8 +24,8 @@ compound-statement :=
 
 statement :=
     ';'
-  | continue ';'
-  | break ';'
+  | continue ';'  -> goto L_test (most recent)
+  | break ';'     -> goto L_false (most recent)
   | return equality ';'
   | compound-statement
   | if-statement
@@ -37,9 +37,23 @@ var-declaration :=
 
 if-statement :=
   if '(' equality ')' statement ( else statement )?
+     ->           if_false equality goto L_false
+                  `true_statement`  # parse_statement will emit some codes
+        L_false:
+
+  | if '(' equality ')' statement ( else statement )?
+     ->           if_false equality goto L_false
+                  `true_statement`  # parse_statement will emit some codes
+                  goto L_fi
+        L_false:  `false_statement`
+        L_fi:     (no code)
 
 while-statement :=
   while '(' equality ')' statement
+     -> L_test:   if_false equality goto L_false
+                  `statement`  # parse_statement will emit some codes
+                  goto L_test
+        L_false:  (no code)
 
 ----------------------------------------------
 
@@ -95,3 +109,18 @@ args-list :=
   の方が優先度を高く計算されていることになる．
 * _parse*()は，全てreductionした後のトークンを返すようにしているが，test文やargs-listだけは
   わざわざトークンにするのが気持ち悪いので，文字列として返している
+** それをやると，
+     while(1)
+   と
+     while(a < b)
+   とがあるので，わざわざtest文の型チェックをしないといけなくなり面倒．
+   tokenに統一
+* gasでラベルだけ2つ連続しててもOKなのは確認した．
+  .L2
+  .L3
+      hoge
+  とか
+* breakにしてもcontinueにしても，効果があるのは直近(最内)のwhileに対して．
+  すなわち，while-statementのstatement部に対して出てくるもの．
+  ということは，直近のwhile-statementで使用されたlabelさえ覚えておけば，
+  ちゃんとgotoに変換できる
