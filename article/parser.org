@@ -26,62 +26,61 @@ statement :=
     ';'
   | continue ';'
   | break ';'
-  | return expression ';'
+  | return equality ';'
   | compound-statement
   | if-statement
   | while-statement
-  | expression ';'
+  | equality ';'
 
 var-declaration :=
   int identifier ';'
 
 if-statement :=
-  if '(' expression ')' statement ( else statement )?
+  if '(' equality ')' statement ( else statement )?
 
 while-statement :=
-  while '(' expression ')' statement
+  while '(' equality ')' statement
 
 ----------------------------------------------
 
+equality :=
+         rel == rel
+         | rel != rel
+         | rel
+
+rel :=
+    expression < expression  (そのままの形を，集約後のものとして返す)
+    | expression <= expression
+    | expression >= expression
+    | expression > expression
+    | expression = expression  -> expression = expression
+    | expression
+
 expression :=
-  equality-expression ( = expression )?
+     term + expression  -> .t = term + expression
+     | term - expression  -> .t = term - expression
+     | term
 
-equality-expression :=
-  relational-expression ( equality-operator relational-expression )?
+term :=
+     unary * term  -> .t = unary * term
+     | unary / term  -> .t = unary / term
+     | unary % term  -> .t = unary % term
+     | unary
 
-equality-operator: one of
-  == != 
+unary :=
+      ! unary  ->  .t = ! unary
+      | + unary
+      | - unary  ->  .t = - unary
+      | factor
 
-relational-expression :=
-  additive-expression ( relational-operator additive-expression )?
+factor :=
+       id
+       | '(' expression ')'
+       | int-literal
+       | id '(' args-list ')'  ->  call id arg1 arg2 ...
 
-relational-operator: one of
-  < > <= >=
-
-additive-expression :=
-  multiplicative-expression ( additive-operator multiplicative-expression )*
-
-additive-operator: one of
-  + - 
-
-multiplicative-expression :=
-  unary-expression ( multiplicative-operator unary-expression )*
-
-multiplicative-operator: one of 
-  * / %
-
-unary-expression :=
-   int-literal
- | identifier ( '(' argument-expression-list ')' )?
- | '(' expression ')'
- | unary-operator unary-expression
-
-unary-operator: one of
-  + - !
-
-argument-expression-list :=
-   EPSILON
- | expression ( , expression )*
+args-list :=
+          (expression (, expression)*)?
 
 
 * 構文主導主義で，パースしていく間に中間言語と記号表を作る
@@ -94,3 +93,5 @@ argument-expression-list :=
   つまり，計算結果が早く出るように(早く集約するように)定義された
   multiplicative-expression
   の方が優先度を高く計算されていることになる．
+* _parse*()は，全てreductionした後のトークンを返すようにしているが，test文やargs-listだけは
+  わざわざトークンにするのが気持ち悪いので，文字列として返している
