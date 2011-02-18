@@ -47,13 +47,13 @@ expression :=
   equality-expression ( = expression )?
 
 equality-expression :=
-  relational-expression ( equality-operator relational-expression )*
+  relational-expression ( equality-operator relational-expression )?
 
 equality-operator: one of
   == != 
 
 relational-expression :=
-  additive-expression ( relational-operator additive-expression )*
+  additive-expression ( relational-operator additive-expression )?
 
 relational-operator: one of
   < > <= >=

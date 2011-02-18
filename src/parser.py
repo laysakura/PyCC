@@ -6,9 +6,11 @@ class Parser:
         self.tok_generator = tok_generator
         self.cur_tok = {"linenum": 0, "token": "", "tok_kind": ""}
         self.next_tok = {"linenum": 0, "token": "", "tok_kind": ""}
+        self.intcode = []
 
     def parse(self):
         self._parse_program()
+        return self.intcode
 
     def _parse_program(self):
         while self.next_tok["tok_kind"] != "TOK_EOF":
@@ -198,23 +200,26 @@ class Parser:
         self._parse_statement()
 
     def _parse_expression(self):
-        self._parse_equality_expression()
+        lh = self._parse_equality_expression()
 
         if self.next_tok["tok_kind"] == "TOK_ASSIGN":
             self.cur_tok, self.next_tok = next(self.tok_generator)
-            self._parse_expression()
+            rh = self._parse_expression()
+            #self.intcode.append({"label": "", "code": lh + " = " + rh})
+
+        return lh
 
     def _parse_equality_expression(self):
-        self._parse_relational_expression()
+        lh = self._parse_relational_expression()
 
-        while self.next_tok["tok_kind"] == "TOK_EQ" or self.next_tok["tok_kind"] == "TOK_NEQ":
+        if self.next_tok["tok_kind"] == "TOK_EQ" or self.next_tok["tok_kind"] == "TOK_NEQ":
             self.cur_tok, self.next_tok = next(self.tok_generator)
             self._parse_relational_expression()
 
     def _parse_relational_expression(self):
         self._parse_additive_expression()
 
-        while self.next_tok["tok_kind"] == "TOK_LT" or self.next_tok["tok_kind"] == "TOK_GT" or self.next_tok["tok_kind"] == "TOK_LE" or self.next_tok["tok_kind"] == "TOK_GE":
+        if self.next_tok["tok_kind"] == "TOK_LT" or self.next_tok["tok_kind"] == "TOK_GT" or self.next_tok["tok_kind"] == "TOK_LE" or self.next_tok["tok_kind"] == "TOK_GE":
             self.cur_tok, self.next_tok = next(self.tok_generator)
             self._parse_additive_expression()
 
