@@ -49,3 +49,5 @@ class Vartable:
         if stack is None:
             # search all outer scopes
             return self.stack_of(var, svlist["parent_scope"])
+
+        return stack

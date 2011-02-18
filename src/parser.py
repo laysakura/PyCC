@@ -121,7 +121,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "goto " + self.last_test_label["token"]})
+            self.intcode.append({"code_kind": "CODE_CONTINUE", "scope": self.scope.curid(), "label": "", "code": "goto " + self.last_test_label["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_BREAK":
@@ -129,7 +129,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "goto " + self.last_false_label["token"]})
+            self.intcode.append({"code_kind": "CODE_BREAK", "scope": self.scope.curid(), "label": "", "code": "goto " + self.last_false_label["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_RETURN":
@@ -141,7 +141,7 @@ class Parser:
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
 
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "return " + equality["token"]})
+            self.intcode.append({"code_kind": "CODE_RETURN", "scope": self.scope.curid(), "label": "", "code": "return " + equality["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_LBRACE":
@@ -162,7 +162,7 @@ class Parser:
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
 
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": code})
+            self.intcode.append({"code_kind": "CODE_EQUALITY", "scope": self.scope.curid(), "label": "", "code": code})
             return
 
     def _parse_var_declaration(self):
@@ -205,23 +205,23 @@ class Parser:
 
         false_label = next(self.label_generator)
         self.last_false_label = false_label
-        self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+        self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
 
         self._parse_statement()
 
         if self.next_tok["tok_kind"] == "TOK_ELSE":
             fi_label = next(self.label_generator)
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "goto " + fi_label["token"]})
-            self.intcode.append({"scope": self.scope.curid(), "label": false_label["token"], "code": ""})
+            self.intcode.append({"code_kind": "CODE_GOTO", "scope": self.scope.curid(), "label": "", "code": "goto " + fi_label["token"]})
+            self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": false_label["token"], "code": ""})
 
             self.cur_tok, self.next_tok = next(self.tok_generator) # parse 'else'
 
             self._parse_statement()
 
-            self.intcode.append({"scope": self.scope.curid(), "label": fi_label["token"], "code": ""})
+            self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": fi_label["token"], "code": ""})
 
         else:
-            self.intcode.append({"scope": self.scope.curid(), "label": false_label["token"], "code": ""})
+            self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": false_label["token"], "code": ""})
 
     def _parse_while_statement(self):
         def err_exit():
@@ -246,13 +246,13 @@ class Parser:
         false_label = next(self.label_generator)
         self.last_false_label = false_label
         self.last_test_label = test_label
-        self.intcode.append({"scope": self.scope.curid(), "label": test_label["token"], "code": ""})
-        self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+        self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": test_label["token"], "code": ""})
+        self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
 
         self._parse_statement()
 
-        self.intcode.append({"scope": self.scope.curid(), "label": "", "code": "goto " + test_label["token"]})
-        self.intcode.append({"scope": self.scope.curid(), "label": false_label["token"], "code": ""})
+        self.intcode.append({"code_kind": "CODE_GOTO", "scope": self.scope.curid(), "label": "", "code": "goto " + test_label["token"]})
+        self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": false_label["token"], "code": ""})
 
     def _parse_equality(self):
         l_rel = self._parse_rel()
@@ -292,7 +292,7 @@ class Parser:
             expression = self._parse_expression()
             tmpvar = next(self.tmpvar_generator)
             self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + term["token"] + ' ' + op + ' ' + expression["token"]})
+            self.intcode.append({"code_kind": "CODE_BIOP", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + term["token"] + ' ' + op + ' ' + expression["token"]})
             return tmpvar
 
         else:
@@ -309,7 +309,7 @@ class Parser:
             term = self._parse_term()
             tmpvar = next(self.tmpvar_generator)
             self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + unary["token"] + ' ' + op + ' ' + term["token"]})
+            self.intcode.append({"code_kind": "CODE_BIOP", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + unary["token"] + ' ' + op + ' ' + term["token"]})
             return tmpvar
 
         else:
@@ -317,28 +317,20 @@ class Parser:
             return unary
 
     def _parse_unary(self):
-        if self.next_tok["tok_kind"] == "TOK_BANG":
-            # ! unary
+        if self.next_tok["tok_kind"] == "TOK_BANG" or self.next_tok["tok_kind"] == "TOK_MINUS":
+            # [!-] unary
             self.cur_tok, self.next_tok = next(self.tok_generator)
+            op = self.cur_tok["token"]
             unary = self._parse_unary()
             tmpvar = next(self.tmpvar_generator)
             self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = ! " + unary["token"]})
+            self.intcode.append({"code_kind": "CODE_UNARY", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + op + ' ' + unary["token"]})
             return tmpvar
 
         elif self.next_tok["tok_kind"] == "TOK_PLUS":
             # + unary
             self.cur_tok, self.next_tok = next(self.tok_generator)
             return self._parse_unary()
-
-        elif self.next_tok["tok_kind"] == "TOK_MINUS":
-            # - unary
-            self.cur_tok, self.next_tok = next(self.tok_generator)
-            unary = self._parse_unary()
-            tmpvar = next(self.tmpvar_generator)
-            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
-            self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = - " + unary["token"]})
-            return tmpvar
 
         else:
             # factor
@@ -372,7 +364,7 @@ class Parser:
                 funcall_code = "call " + identifier["token"]
                 for arg in args:
                     funcall_code += ' ' + arg
-                self.intcode.append({"scope": self.scope.curid(), "label": "", "code": funcall_code})
+                self.intcode.append({"code_kind": "CODE_FUNCALL", "scope": self.scope.curid(), "label": "", "code": funcall_code})
 
                 # C functions put retval on %eax register
                 return {"linenum": -1, "token": "%eax", "tok_kind": "TOK_REGISTER"}
