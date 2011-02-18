@@ -26,7 +26,7 @@ statement :=
     ';'
   | continue ';'  -> goto L_test (most recent)
   | break ';'     -> goto L_false (most recent)
-  | return equality ';'
+  | return equality ';'  -> return equality
   | compound-statement
   | if-statement
   | while-statement

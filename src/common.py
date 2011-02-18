@@ -1,6 +1,12 @@
 import sys
 import re
 
+def gen_unique_id():
+    n = 0
+    while True:
+        yield n
+        n += 1
+
 def fully_match(pattern, string):
     """
     Returns if 'string' completely matches to 'pattern'
