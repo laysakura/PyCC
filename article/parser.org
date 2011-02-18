@@ -124,3 +124,4 @@ args-list :=
   すなわち，while-statementのstatement部に対して出てくるもの．
   ということは，直近のwhile-statementで使用されたlabelさえ覚えておけば，
   ちゃんとgotoに変換できる
+* scopeができるたびにvartable.new_svlist()が必要．そうしないと，vartable.svlistsが親を辿っていくことが出来なくなる

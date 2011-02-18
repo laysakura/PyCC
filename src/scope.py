@@ -15,15 +15,14 @@ class Scope:
         self._curid = newid
 
     def scopeout(self):
-        self._curid = self._parent_of(self.curid())
+        self._curid = self.parent_of(self.curid())
 
-    def _parent_of(self, search_id):
+    def parent_of(self, search_id):
         def find(scopes):
             if scopes == []:
                 common.err_exit("[Internal Error]  Cannot find scope (Scope._find_scope())\n")
             elif scopes[0]["id"] == search_id:
-                parent = scopes[0]["parent"]
-                return parent
+                return scopes[0]["parent"]
             else:
                 return find(scopes[1:])
 

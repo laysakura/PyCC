@@ -1,6 +1,7 @@
 from . import tokenizer
 from . import common
 from . import scope
+from . import vartable
 
 class Parser:
     def __init__(self, tok_generator):
@@ -17,6 +18,7 @@ class Parser:
         self.intcode = []
 
         self.scope = scope.Scope()
+        self.vartable = vartable.Vartable()
 
     def _gen_unique_token(self, prefix, tok_kind):
         n = 0
@@ -26,7 +28,7 @@ class Parser:
 
     def parse(self):
         self._parse_program()
-        return self.intcode
+        return self.intcode, self.vartable
 
     def _parse_program(self):
         while self.next_tok["tok_kind"] != "TOK_EOF":
@@ -93,6 +95,7 @@ class Parser:
             err_exit()
 
         self.scope.scopein()
+        self.vartable.new_svlist(self.scope.curid(), self.scope.parent_of(self.scope.curid()))
 
         while self.next_tok["tok_kind"] == "TOK_INT":
             self._parse_var_declaration()
@@ -174,6 +177,8 @@ class Parser:
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_ID":
             err_exit()
+
+        self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), self.cur_tok["token"])
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
@@ -286,6 +291,7 @@ class Parser:
             op = self.cur_tok["token"]
             expression = self._parse_expression()
             tmpvar = next(self.tmpvar_generator)
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
             self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + term["token"] + ' ' + op + ' ' + expression["token"]})
             return tmpvar
 
@@ -302,6 +308,7 @@ class Parser:
             op = self.cur_tok["token"]
             term = self._parse_term()
             tmpvar = next(self.tmpvar_generator)
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
             self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + unary["token"] + ' ' + op + ' ' + term["token"]})
             return tmpvar
 
@@ -315,6 +322,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             unary = self._parse_unary()
             tmpvar = next(self.tmpvar_generator)
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
             self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = ! " + unary["token"]})
             return tmpvar
 
@@ -328,6 +336,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             unary = self._parse_unary()
             tmpvar = next(self.tmpvar_generator)
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
             self.intcode.append({"scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = - " + unary["token"]})
             return tmpvar
 
