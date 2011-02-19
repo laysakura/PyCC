@@ -2,8 +2,9 @@ from . import const
 
 class Vartable:
     def __init__(self):
-        self.svlists = []       # 'svlist' is like this:
-                                # {"scope": 3, "parent_scope": 2, "vars": [ {"id": a, "stack": -4}, ...] }
+        self.svlists = []
+        # 'svlist' is like this:
+        # {"scope": 3, "parent_scope": 2, "child_scopes": [4,6], "vars": [ {"id": a, "stack": -4}, ...] }
 
     def _find_svlist(self, scope):
         def find(svlists):
@@ -20,8 +21,10 @@ class Vartable:
         svlist["vars"].append( {"id": var, "stack": svlist["vars"][len(svlist["vars"]) - 1]["stack"] - const.INT_SIZE} )
 
     def new_svlist(self, scope, parent_scope):
+        if parent_scope is not None:
+            self._find_svlist(parent_scope)["child_scopes"].append(scope)
         # See self._add_var_to() and find why I put '.BANPEI'
-        self.svlists.append({"scope": scope, "parent_scope": parent_scope, "vars": [ {"id": ".BANPEI", "stack": const.LOCAL_VAR_OFFSET_FROM_EBP + const.INT_SIZE} ]})
+        self.svlists.append({"scope": scope, "parent_scope": parent_scope, "child_scopes": [], "vars": [ {"id": ".BANPEI", "stack": const.LOCAL_VAR_OFFSET_FROM_EBP + const.INT_SIZE} ]})
         return self.svlists[len(self.svlists) - 1]
 
     def reg_var(self, scope, parent_scope, var):
@@ -51,3 +54,16 @@ class Vartable:
             return self.stack_of(var, svlist["parent_scope"])
 
         return stack
+
+    def stack_size(self, scope):
+        if scope is None:
+            return 0
+
+        svlist = self._find_svlist(scope)
+        size = (len(svlist["vars"]) - 1) * const.INT_SIZE
+
+        children = self._find_svlist(scope)["child_scopes"]
+        for child in children:
+            size += self.stack_size(child)
+
+        return size

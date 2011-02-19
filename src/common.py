@@ -1,6 +1,15 @@
 import sys
 import re
 
+def flatten(L):
+    if isinstance(L, list):
+        if L == []:
+            return []
+        else:
+            return flatten(L[0]) + flatten(L[1:])
+    else:
+        return [L]
+
 def gen_unique_id():
     n = 0
     while True:

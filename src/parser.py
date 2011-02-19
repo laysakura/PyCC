@@ -47,6 +47,13 @@ class Parser:
         if self.cur_tok["tok_kind"] != "TOK_ID":
             err_exit()
 
+        fun_name = self.cur_tok["token"]
+
+        self.scope.scopein()
+        self.vartable.new_svlist(self.scope.curid(), self.scope.parent_of(self.scope.curid()))
+
+        self.intcode.append({"code_kind": "CODE_FUNDEF", "scope": self.scope.curid(), "label": "", "code": "function " + fun_name})
+
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
@@ -58,6 +65,10 @@ class Parser:
             err_exit()
 
         self._parse_compound_statement()
+
+        self.scope.scopeout()
+
+        self.intcode.append({"code_kind": "CODE_FUNEND", "scope": self.scope.curid(), "label": "", "code": "endfunction " + fun_name})
 
     def _parse_parameter_list(self):
         if self.next_tok["tok_kind"] == "TOK_RPAREN":
@@ -121,7 +132,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
-            self.intcode.append({"code_kind": "CODE_CONTINUE", "scope": self.scope.curid(), "label": "", "code": "goto " + self.last_test_label["token"]})
+            self.intcode.append({"code_kind": "CODE_GOTO", "scope": self.scope.curid(), "label": "", "code": "goto " + self.last_test_label["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_BREAK":
@@ -129,7 +140,7 @@ class Parser:
             self.cur_tok, self.next_tok = next(self.tok_generator)
             if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
                 err_exit()
-            self.intcode.append({"code_kind": "CODE_BREAK", "scope": self.scope.curid(), "label": "", "code": "goto " + self.last_false_label["token"]})
+            self.intcode.append({"code_kind": "CODE_GOTO", "scope": self.scope.curid(), "label": "", "code": "goto " + self.last_false_label["token"]})
             return
 
         elif self.next_tok["tok_kind"] == "TOK_RETURN":
@@ -205,7 +216,7 @@ class Parser:
 
         false_label = next(self.label_generator)
         self.last_false_label = false_label
-        self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+        self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "iffalse " + test["token"] + " goto " + false_label["token"]})
 
         self._parse_statement()
 
@@ -247,7 +258,7 @@ class Parser:
         self.last_false_label = false_label
         self.last_test_label = test_label
         self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": test_label["token"], "code": ""})
-        self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "if_false " + test["token"] + " goto " + false_label["token"]})
+        self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "iffalse " + test["token"] + " goto " + false_label["token"]})
 
         self._parse_statement()
 

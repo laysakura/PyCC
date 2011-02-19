@@ -7,6 +7,9 @@ function-definition* end-of-file
 
 function-definition :=
   int identifier '(' parameter-list ')' compound-statement
+     -> function identifier
+        `compound-statement`
+        endfunction identifier
 
 parameter-list :=
     EPSILON
@@ -125,3 +128,8 @@ args-list :=
   ということは，直近のwhile-statementで使用されたlabelさえ覚えておけば，
   ちゃんとgotoに変換できる
 * scopeができるたびにvartable.new_svlist()が必要．そうしないと，vartable.svlistsが親を辿っていくことが出来なくなる
+* 変数が被っててもエラーにならないよ
+* 引数の数とかが合わない関数呼出しもエラーにならないよ
+* 関数定義の部分だけはスコープを一つ深くすると考えるとうまい．
+  そうしないと，関数は全てグローバルスコープであって，「自分のスコープ
+  以下のスタックフレームサイズを教えて」ができなくて非常に面倒

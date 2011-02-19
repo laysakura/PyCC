@@ -11,4 +11,3 @@ if __name__ == "__main__":
 
     for svlist in vartable.svlists:
         print(svlist)
-
