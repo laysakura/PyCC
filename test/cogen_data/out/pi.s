@@ -8,11 +8,7 @@ get_random:
 	movl	8(%ebp), %eax
 	movl	%eax, -4(%ebp)
 	movl	-4(%ebp), %eax
-	movl	%eax, -4(%ebp)
-	movl	-4(%ebp), %eax
 	imull	$1103515245, %eax
-	movl	%eax, -4(%ebp)
-	movl	-4(%ebp), %eax
 	movl	%eax, -4(%ebp)
 	addl	$12345, -4(%ebp)
 	movl	-4(%ebp), %eax
@@ -42,8 +38,6 @@ c0func:
 	movl	-8(%ebp), %eax
 	movl	%eax, -32(%ebp)
 	movl	-32(%ebp), %eax
-	movl	%eax, -32(%ebp)
-	movl	-32(%ebp), %eax
 	movl	%eax, %edx
 	sarl	$31, %edx
 	movl	12(%ebp), %ebx
@@ -58,8 +52,6 @@ c0func:
 	movl	-36(%ebp), %eax
 	movl	%eax, -8(%ebp)
 	movl	-8(%ebp), %eax
-	movl	%eax, -40(%ebp)
-	movl	-40(%ebp), %eax
 	movl	%eax, -40(%ebp)
 	movl	-40(%ebp), %eax
 	movl	%eax, %edx
@@ -78,8 +70,6 @@ c0func:
 	movl	-8(%ebp), %eax
 	movl	%eax, -48(%ebp)
 	movl	-48(%ebp), %eax
-	movl	%eax, -48(%ebp)
-	movl	-48(%ebp), %eax
 	movl	%eax, %edx
 	sarl	$31, %edx
 	movl	12(%ebp), %ebx
@@ -90,35 +80,23 @@ c0func:
 	movl	-16(%ebp), %eax
 	movl	%eax, -52(%ebp)
 	movl	-52(%ebp), %eax
-	movl	%eax, -52(%ebp)
-	movl	-52(%ebp), %eax
 	imull	-16(%ebp), %eax
 	movl	%eax, -52(%ebp)
 	movl	-20(%ebp), %eax
 	movl	%eax, -56(%ebp)
 	movl	-56(%ebp), %eax
-	movl	%eax, -56(%ebp)
-	movl	-56(%ebp), %eax
 	imull	-20(%ebp), %eax
 	movl	%eax, -56(%ebp)
-	movl	-52(%ebp), %eax
-	movl	%eax, -52(%ebp)
 	movl	-56(%ebp), %eax
 	addl	%eax, -52(%ebp)
 	movl	-24(%ebp), %eax
 	movl	%eax, -60(%ebp)
 	movl	-60(%ebp), %eax
-	movl	%eax, -60(%ebp)
-	movl	-60(%ebp), %eax
 	imull	-24(%ebp), %eax
 	movl	%eax, -60(%ebp)
-	movl	-52(%ebp), %eax
-	movl	%eax, -52(%ebp)
 	movl	-60(%ebp), %eax
 	addl	%eax, -52(%ebp)
 	movl	12(%ebp), %eax
-	movl	%eax, -64(%ebp)
-	movl	-64(%ebp), %eax
 	movl	%eax, -64(%ebp)
 	movl	-64(%ebp), %eax
 	imull	12(%ebp), %eax
@@ -128,15 +106,11 @@ c0func:
 	jg	.L2
 	movl	-12(%ebp), %eax
 	movl	%eax, -68(%ebp)
-	movl	-68(%ebp), %eax
-	movl	%eax, -68(%ebp)
 	addl	$1, -68(%ebp)
 	movl	-68(%ebp), %eax
 	movl	%eax, -12(%ebp)
 .L2:
 	movl	-4(%ebp), %eax
-	movl	%eax, -72(%ebp)
-	movl	-72(%ebp), %eax
 	movl	%eax, -72(%ebp)
 	addl	$1, -72(%ebp)
 	movl	-72(%ebp), %eax
@@ -158,11 +132,7 @@ c0func:
 	movl	-12(%ebp), %eax
 	movl	%eax, -92(%ebp)
 	movl	-92(%ebp), %eax
-	movl	%eax, -92(%ebp)
-	movl	-92(%ebp), %eax
 	imull	$6, %eax
-	movl	%eax, -92(%ebp)
-	movl	-92(%ebp), %eax
 	movl	%eax, -92(%ebp)
 	movl	-92(%ebp), %eax
 	movl	$0, %edx
@@ -179,11 +149,7 @@ c0func:
 	movl	-12(%ebp), %eax
 	movl	%eax, -104(%ebp)
 	movl	-104(%ebp), %eax
-	movl	%eax, -104(%ebp)
-	movl	-104(%ebp), %eax
 	imull	$6, %eax
-	movl	%eax, -104(%ebp)
-	movl	-104(%ebp), %eax
 	movl	%eax, -104(%ebp)
 	movl	-104(%ebp), %eax
 	movl	%eax, %edx

@@ -15,8 +15,6 @@ fib:
 .L0:
 	movl	8(%ebp), %eax
 	movl	%eax, -4(%ebp)
-	movl	-4(%ebp), %eax
-	movl	%eax, -4(%ebp)
 	subl	$1, -4(%ebp)
 	movl	-4(%ebp), %eax
 	movl	%eax, 0(%esp)
@@ -24,15 +22,11 @@ fib:
 	movl	%eax, -8(%ebp)
 	movl	8(%ebp), %eax
 	movl	%eax, -12(%ebp)
-	movl	-12(%ebp), %eax
-	movl	%eax, -12(%ebp)
 	subl	$2, -12(%ebp)
 	movl	-12(%ebp), %eax
 	movl	%eax, 0(%esp)
 	call	fib
 	movl	%eax, -16(%ebp)
-	movl	-8(%ebp), %eax
-	movl	%eax, -8(%ebp)
 	movl	-16(%ebp), %eax
 	addl	%eax, -8(%ebp)
 	movl	-8(%ebp), %eax

@@ -10,16 +10,12 @@ check_prime:
 	movl	-4(%ebp), %eax
 	movl	%eax, -8(%ebp)
 	movl	-8(%ebp), %eax
-	movl	%eax, -8(%ebp)
-	movl	-8(%ebp), %eax
 	imull	-4(%ebp), %eax
 	movl	%eax, -8(%ebp)
 	movl	-8(%ebp), %eax
 	cmpl	8(%ebp), %eax
 	jg	.L1
 	movl	8(%ebp), %eax
-	movl	%eax, -12(%ebp)
-	movl	-12(%ebp), %eax
 	movl	%eax, -12(%ebp)
 	movl	-12(%ebp), %eax
 	movl	%eax, %edx
@@ -35,8 +31,6 @@ check_prime:
 	ret
 .L2:
 	movl	-4(%ebp), %eax
-	movl	%eax, -16(%ebp)
-	movl	-16(%ebp), %eax
 	movl	%eax, -16(%ebp)
 	addl	$1, -16(%ebp)
 	movl	-16(%ebp), %eax
@@ -65,15 +59,11 @@ count_primes:
 	movl	%eax, 0(%esp)
 	call	check_prime
 	movl	%eax, -16(%ebp)
-	movl	-12(%ebp), %eax
-	movl	%eax, -12(%ebp)
 	movl	-16(%ebp), %eax
 	addl	%eax, -12(%ebp)
 	movl	-12(%ebp), %eax
 	movl	%eax, -8(%ebp)
 	movl	-4(%ebp), %eax
-	movl	%eax, -20(%ebp)
-	movl	-20(%ebp), %eax
 	movl	%eax, -20(%ebp)
 	addl	$1, -20(%ebp)
 	movl	-20(%ebp), %eax

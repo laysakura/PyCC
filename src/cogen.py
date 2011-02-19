@@ -299,18 +299,45 @@ def _gen_biop(intcode, vartable):
     #    -> .t = a
     #       .t [+-*/%]= b
     asm = []
-    asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
 
     if op == '+':
-        asm.append(_addl(rh2, lh, vartable, intcode["scope"]))
+        if lh == rh1:
+            asm.append(_addl(rh2, lh, vartable, intcode["scope"]))
+        elif lh == rh2:
+            asm.append(_addl(rh1, lh, vartable, intcode["scope"]))
+        else:
+            asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
+            asm.append(_addl(rh2, lh, vartable, intcode["scope"]))
+
     elif op == '-':
-        asm.append(_subl(rh2, lh, vartable, intcode["scope"]))
+        if lh == rh1:
+            asm.append(_subl(rh2, lh, vartable, intcode["scope"]))
+        else:
+            asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
+            asm.append(_subl(rh2, lh, vartable, intcode["scope"]))
+
     elif op == '*':
-        asm.append(_imull(rh2, lh, vartable, intcode["scope"]))
+        if lh == rh1:
+            asm.append(_imull(rh2, lh, vartable, intcode["scope"]))
+        elif lh == rh2:
+            asm.append(_imull(rh1, lh, vartable, intcode["scope"]))
+        else:
+            asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
+            asm.append(_imull(rh2, lh, vartable, intcode["scope"]))
+
     elif op == '/':
-        asm.append(_idivl(rh2, lh, vartable, intcode["scope"]))
+        if lh == rh1:
+            asm.append(_idivl(rh2, lh, vartable, intcode["scope"]))
+        else:
+            asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
+            asm.append(_idivl(rh2, lh, vartable, intcode["scope"]))
+
     elif op == '%':
-        asm.append(_reml(rh2, lh, vartable, intcode["scope"]))
+        if lh == rh1:
+            asm.append(_reml(rh2, lh, vartable, intcode["scope"]))
+        else:
+            asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
+            asm.append(_reml(rh2, lh, vartable, intcode["scope"]))
 
     return asm
 

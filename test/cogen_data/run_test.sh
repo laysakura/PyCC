@@ -37,11 +37,11 @@ benchmark()
     echo "" 1>&2
 }
 
+benchmark prime5.c 10000000
 benchmark pi.c 100000000 1000 1
 benchmark fib.c 40
 benchmark prime.c 10000000
 benchmark ackermann.c 3 13
-benchmark prime5.c 10000000
 
 # rm *.$ext
 # rm $ext.s

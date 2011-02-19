@@ -10,8 +10,6 @@ ack:
 	jne	.L0
 	movl	12(%ebp), %eax
 	movl	%eax, -4(%ebp)
-	movl	-4(%ebp), %eax
-	movl	%eax, -4(%ebp)
 	addl	$1, -4(%ebp)
 	movl	-4(%ebp), %eax
 	leave
@@ -21,8 +19,6 @@ ack:
 	cmpl	$0, %eax
 	jne	.L1
 	movl	8(%ebp), %eax
-	movl	%eax, -8(%ebp)
-	movl	-8(%ebp), %eax
 	movl	%eax, -8(%ebp)
 	subl	$1, -8(%ebp)
 	movl	-8(%ebp), %eax
@@ -36,12 +32,8 @@ ack:
 .L1:
 	movl	8(%ebp), %eax
 	movl	%eax, -16(%ebp)
-	movl	-16(%ebp), %eax
-	movl	%eax, -16(%ebp)
 	subl	$1, -16(%ebp)
 	movl	12(%ebp), %eax
-	movl	%eax, -20(%ebp)
-	movl	-20(%ebp), %eax
 	movl	%eax, -20(%ebp)
 	subl	$1, -20(%ebp)
 	movl	8(%ebp), %eax
@@ -84,8 +76,6 @@ c0func:
 	call	print_line
 	movl	%eax, -16(%ebp)
 	movl	-4(%ebp), %eax
-	movl	%eax, -20(%ebp)
-	movl	-20(%ebp), %eax
 	movl	%eax, -20(%ebp)
 	addl	$1, -20(%ebp)
 	movl	-20(%ebp), %eax
