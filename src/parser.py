@@ -58,7 +58,9 @@ class Parser:
         if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
 
-        self._parse_parameter_list()
+        args = self._parse_parameter_list()
+        for arg in args:
+            self.vartable.reg_arg(self.scope.curid(), self.scope.parent_of(self.scope.curid()), arg)
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_RPAREN":
@@ -71,17 +73,24 @@ class Parser:
         self.intcode.append({"code_kind": "CODE_FUNEND", "scope": self.scope.curid(), "label": "", "code": "endfunction " + fun_name})
 
     def _parse_parameter_list(self):
-        if self.next_tok["tok_kind"] == "TOK_RPAREN":
-            return
+        def err_exit():
+            common.err_exit("[Parse Error] L." + str(self.cur_tok["linenum"])
+                            + "  Invalid syntacs.\n")
 
-        self._parse_parameter()
+        if self.next_tok["tok_kind"] == "TOK_RPAREN":
+            return []
+
+        params = []
+        params.append(self._parse_parameter()["token"])
 
         while self.next_tok["tok_kind"] == "TOK_COMMA":
             self.cur_tok, self.next_tok = next(self.tok_generator)
-            self._parse_parameter()
+            params.append(self._parse_parameter()["token"])
 
         if self.next_tok["tok_kind"] != "TOK_RPAREN":
-            return
+            err_exit()
+
+        return params
 
     def _parse_parameter(self):
         def err_exit():
@@ -95,6 +104,8 @@ class Parser:
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_ID":
             err_exit()
+
+        return self.cur_tok
 
     def _parse_compound_statement(self):
         def err_exit():
@@ -355,6 +366,7 @@ class Parser:
         if self.next_tok["tok_kind"] == "TOK_INT_LITERAL":
             # single number
             self.cur_tok, self.next_tok = next(self.tok_generator)
+            self.cur_tok["token"] = '$' + self.cur_tok["token"] # attach prefix
             return self.cur_tok
 
         elif self.next_tok["tok_kind"] == "TOK_ID":
@@ -371,7 +383,6 @@ class Parser:
                 if self.cur_tok["tok_kind"] != "TOK_RPAREN":
                     err_exit()
 
-                # emit intcode for function call
                 funcall_code = "call " + identifier["token"]
                 for arg in args:
                     funcall_code += ' ' + arg

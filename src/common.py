@@ -44,3 +44,15 @@ def startwith(string, pattern):
 def err_exit(err):
     sys.stderr.write(err)
     exit(1)
+
+def isimm(s):
+    return s[0] == '$'
+
+def isreg(s):
+    return s[0] == '%'
+
+def isstack(s):
+    return s.find("(%esp)") != -1 or s.find("(%ebp)") != -1
+
+def isvar(s):
+    return not (isimm(s) or isreg(s) or isstack(s))
