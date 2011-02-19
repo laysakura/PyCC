@@ -119,6 +119,89 @@ def _neg(v, vartable, scope):
     asm.append("\tnegl\t" + v)
     return asm
 
+def _addl(_from, to, vartable, scope):
+    if common.isimm(to):
+        common.err_exit("[Cogen Error] Cannot assign anything to an immediate.\n")
+
+    _from = vartable.place_of(_from, scope)
+    to = vartable.place_of(to, scope)
+
+    asm = []
+    if common.isstack(_from) and common.isstack(to):
+        asm.append("\tmovl\t" + _from + ", %eax")
+        asm.append("\taddl\t" + "%eax, " + to)
+    else:
+        asm.append("\taddl\t" + _from + ", " + to)
+
+    return asm
+
+def _subl(_from, to, vartable, scope):
+    if common.isimm(to):
+        common.err_exit("[Cogen Error] Cannot assign anything to an immediate.\n")
+
+    _from = vartable.place_of(_from, scope)
+    to = vartable.place_of(to, scope)
+
+    asm = []
+    if common.isstack(_from) and common.isstack(to):
+        asm.append("\tmovl\t" + _from + ", %eax")
+        asm.append("\tsubl\t" + "%eax, " + to)
+    else:
+        asm.append("\tsubl\t" + _from + ", " + to)
+    return asm
+    pass
+
+def _imull(_from, to, vartable, scope):
+    # 'to' must be a register for 'imull'
+
+    if common.isimm(to):
+        common.err_exit("[Cogen Error] Cannot assign anything to an immediate.\n")
+
+    _from = vartable.place_of(_from, scope)
+    to = vartable.place_of(to, scope)
+
+    asm = []
+    if common.isstack(to):
+        asm.append(_movl(to, "%eax", vartable, scope))
+        asm.append("\timull\t" + _from + ", %eax")
+        asm.append(_movl("%eax", to, vartable, scope))
+    else:
+        asm.append("\timull\t" + _from + ", " + to)
+    return asm
+
+def _idivl(_from, to, vartable, scope):
+    # 'idivl %ebx' means:
+    #     -> %eax = %eax / %ebx
+    #        %edx = %eax % %ebx
+    #
+    # fill %edx by $0 before division
+    _from = vartable.place_of(_from, scope)
+    to = vartable.place_of(to, scope)
+    asm = []
+    asm.append(_movl(to, "%eax", vartable, scope))
+    asm.append(_movl("$0", "%edx", vartable, scope))
+    asm.append(_movl(_from, "%ebx", vartable, scope))
+    asm.append("\tidivl\t" + "%ebx")
+    asm.append(_movl("%eax", to, vartable, scope))
+    return asm
+
+def _reml(_from, to, vartable, scope):
+    # 'idivl %ebx' means:
+    #     -> %eax = %eax / %ebx
+    #        %edx = %eax % %ebx
+    #
+    # fill %edx by %eax and shift right before calculating remnant
+    _from = vartable.place_of(_from, scope)
+    to = vartable.place_of(to, scope)
+    asm = []
+    asm.append(_movl(to, "%eax", vartable, scope))
+    asm.append(_movl("%eax", "%edx", vartable, scope))
+    asm.append("\tsarl\t" + "$31, %edx")
+    asm.append(_movl(_from, "%ebx", vartable, scope))
+    asm.append("\tidivl\t" + "%ebx")
+    asm.append(_movl("%edx", to, vartable, scope))
+    return asm
+
 def _gen_header():
     return ["\t.text"]
 
@@ -208,7 +291,29 @@ def _gen_label(intcode, vartable):
     return asm
 
 def _gen_biop(intcode, vartable):
-    pass
+    # '.t = a [+-*/%] b'   where .t != a and .t != b
+    biop_expr = intcode["code"].split()
+    lh, rh1, op, rh2 = biop_expr[0], biop_expr[2], biop_expr[3], biop_expr[4]
+
+    # translate into 2-address code:
+    # .t = a [+-*/%] b
+    #    -> .t = a
+    #       .t [+-*/%]= b
+    asm = []
+    asm.append(_movl(rh1, lh, vartable, intcode["scope"]))
+
+    if op == '+':
+        asm.append(_addl(rh2, lh, vartable, intcode["scope"]))
+    elif op == '-':
+        asm.append(_subl(rh2, lh, vartable, intcode["scope"]))
+    elif op == '*':
+        asm.append(_imull(rh2, lh, vartable, intcode["scope"]))
+    elif op == '/':
+        asm.append(_idivl(rh2, lh, vartable, intcode["scope"]))
+    elif op == '%':
+        asm.append(_reml(rh2, lh, vartable, intcode["scope"]))
+
+    return asm
 
 def _gen_unary(intcode, vartable):
     # 'lh = op rh'
