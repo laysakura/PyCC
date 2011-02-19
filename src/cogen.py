@@ -102,7 +102,12 @@ def _not(v, vartable, scope):
         common.err_exit("[Internal Error] argument should not be a number. (cogen_not())\n")
 
     asm = []
-    asm.append("\tnotl\t" + v)
+    asm.append(_cmpl("$0", v, vartable, scope))
+    asm.append("\tsete\t" + "%al") # if the result of 'cmpl' is 'equal', %al is 1
+                                   # otherwise %al is 0
+    asm.append("\tmovzbl\t" + "%al, %eax") # movzbl(%al == 0) -> %eax == 1
+                                           # movzbl(%al == 1) -> %eax == 0
+    asm.append(_movl("%eax", v, vartable, scope))
     return asm
 
 def _neg(v, vartable, scope):
