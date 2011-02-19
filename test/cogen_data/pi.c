@@ -29,6 +29,11 @@ int c0func(int a, int b, int c, int d, int e, int f)
         }
       i = i + 1;
     }
+  print_int(a);
+  print_line();
+  print_int(cnt);
+  print_line();
+
   print_int(cnt * 6 / a);
   print_char(46);
   print_int(cnt * 6 % a);

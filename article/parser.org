@@ -74,14 +74,14 @@ rel :=
     | expression
 
 expression :=
-     term + expression  -> .t = term + expression
-     | term - expression  -> .t = term - expression
+     term ('+' term)+  -> .t = term ('+' expression)+
+     | term (- term)+  -> .t = term (- expression)+
      | term
 
 term :=
-     unary * term  -> .t = unary * term
-     | unary / term  -> .t = unary / term
-     | unary % term  -> .t = unary % term
+     unary ('*' unary)+  -> .t = unary ('*' unary)+
+     | unary (/ unary)+  -> .t = unary (/ unary)+
+     | unary (% term)+  -> .t = unary (% unary)+
      | unary
 
 unary :=
@@ -100,6 +100,11 @@ args-list :=
           (expression (, expression)*)?
 
 
+* 最初は
+    term := unary * term | ....
+  とかの文法にしてたけど，これじゃあ右結合．例えば，
+    52471810 * 6 / 100000000
+  で困った．
 * 構文主導主義で，パースしていく間に中間言語と記号表を作る
 * parserはやっぱり状態機械．どこまでトークンを読んだという情報を元に動く．
   だからclassが自然かな．

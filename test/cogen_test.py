@@ -10,10 +10,10 @@ if __name__ == "__main__":
     asm = cogen.cogen(intcodes, vartable)
 
     for svlist in vartable.svlists:
-        sys.stderr.write(str(svlist))
+        sys.stderr.write(str(svlist) + '\n')
 
     for line in intcodes:
-        sys.stderr.write(line["label"] + '\t' + line["code"] + "\t\tScope:" + str(line["scope"]))
+        sys.stderr.write(line["label"] + '\t' + line["code"] + "\t\tScope:" + str(line["scope"]) + '\n')
 
     sys.stderr.write("\n====Assembly====")
     for line in asm:

@@ -2,6 +2,7 @@ from . import tokenizer
 from . import common
 from . import scope
 from . import vartable
+from . import const
 
 class Parser:
     def __init__(self, tok_generator):
@@ -19,6 +20,7 @@ class Parser:
 
         self.scope = scope.Scope()
         self.vartable = vartable.Vartable()
+        self.local_var_stack_offset = const.LOCAL_VAR_OFFSET_FROM_EBP
 
     def _gen_unique_token(self, prefix, tok_kind):
         n = 0
@@ -49,6 +51,7 @@ class Parser:
 
         fun_name = self.cur_tok["token"]
 
+        self.local_var_stack_offset = const.LOCAL_VAR_OFFSET_FROM_EBP
         self.scope.scopein()
         self.vartable.new_svlist(self.scope.curid(), self.scope.parent_of(self.scope.curid()))
 
@@ -200,7 +203,8 @@ class Parser:
         if self.cur_tok["tok_kind"] != "TOK_ID":
             err_exit()
 
-        self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), self.cur_tok["token"])
+        self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), self.cur_tok["token"], self.local_var_stack_offset)
+        self.local_var_stack_offset -= const.INT_SIZE
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_SEMICOLON":
@@ -258,17 +262,18 @@ class Parser:
         if self.cur_tok["tok_kind"] != "TOK_LPAREN":
             err_exit()
 
+        test_label = next(self.label_generator)
+        false_label = next(self.label_generator)
+        self.last_false_label = false_label
+        self.last_test_label = test_label
+        self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": test_label["token"], "code": ""})
+
         test = self._parse_equality()
 
         self.cur_tok, self.next_tok = next(self.tok_generator)
         if self.cur_tok["tok_kind"] != "TOK_RPAREN":
             err_exit()
 
-        test_label = next(self.label_generator)
-        false_label = next(self.label_generator)
-        self.last_false_label = false_label
-        self.last_test_label = test_label
-        self.intcode.append({"code_kind": "CODE_LABEL", "scope": self.scope.curid(), "label": test_label["token"], "code": ""})
         self.intcode.append({"code_kind": "CODE_IFFALSE", "scope": self.scope.curid(), "label": "", "code": "iffalse " + test["token"] + " goto " + false_label["token"]})
 
         self._parse_statement()
@@ -306,37 +311,51 @@ class Parser:
 
     def _parse_expression(self):
         term = self._parse_term()
-
-        if self.next_tok["tok_kind"] == "TOK_PLUS" or self.next_tok["tok_kind"] == "TOK_MINUS":
-            # term [+-] expression
-            self.cur_tok, self.next_tok = next(self.tok_generator)
-            op = self.cur_tok["token"]
-            expression = self._parse_expression()
-            tmpvar = next(self.tmpvar_generator)
-            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
-            self.intcode.append({"code_kind": "CODE_BIOP", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + term["token"] + ' ' + op + ' ' + expression["token"]})
-            return tmpvar
-
-        else:
-            # term
+        if self.next_tok["tok_kind"] != "TOK_PLUS" and self.next_tok["tok_kind"] != "TOK_MINUS":
             return term
 
-    def _parse_term(self):
-        unary = self._parse_unary()
+        if term["tok_kind"] != "TOK_TMPVAR":
+            reduction = next(self.tmpvar_generator)
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), reduction["token"], self.local_var_stack_offset)
+            self.local_var_stack_offset -= const.INT_SIZE
 
-        if self.next_tok["tok_kind"] == "TOK_MUL" or self.next_tok["tok_kind"] == "TOK_DIV" or self.next_tok["tok_kind"] == "TOK_REM":
-            # unary [*/%] term
+            self.intcode.append({"code_kind": "CODE_EQUALITY", "scope": self.scope.curid(), "label": "", "code": reduction["token"] + " = " + term["token"]})
+
+        else:
+            reduction = term
+
+        while self.next_tok["tok_kind"] == "TOK_PLUS" or self.next_tok["tok_kind"] == "TOK_MINUS":
+            # term ([+-] term)+
             self.cur_tok, self.next_tok = next(self.tok_generator)
             op = self.cur_tok["token"]
             term = self._parse_term()
-            tmpvar = next(self.tmpvar_generator)
-            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
-            self.intcode.append({"code_kind": "CODE_BIOP", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + unary["token"] + ' ' + op + ' ' + term["token"]})
-            return tmpvar
+            self.intcode.append({"code_kind": "CODE_BIOP", "scope": self.scope.curid(), "label": "", "code": reduction["token"] + " = " + reduction["token"] + ' ' + op + ' ' + term["token"]})
+
+        return reduction
+
+    def _parse_term(self):
+        unary = self._parse_unary()
+        if self.next_tok["tok_kind"] != "TOK_MUL" and self.next_tok["tok_kind"] != "TOK_DIV" and self.next_tok["tok_kind"] != "TOK_REM":
+            return unary
+
+        if unary["tok_kind"] != "TOK_TMPVAR":
+            reduction = next(self.tmpvar_generator)
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), reduction["token"], self.local_var_stack_offset)
+            self.local_var_stack_offset -= const.INT_SIZE
+
+            self.intcode.append({"code_kind": "CODE_EQUALITY", "scope": self.scope.curid(), "label": "", "code": reduction["token"] + " = " + unary["token"]})
 
         else:
-            # unary
-            return unary
+            reduction = unary
+
+        while self.next_tok["tok_kind"] == "TOK_MUL" or self.next_tok["tok_kind"] == "TOK_DIV" or self.next_tok["tok_kind"] == "TOK_REM":
+            # unary ([*/%] unary)+
+            self.cur_tok, self.next_tok = next(self.tok_generator)
+            op = self.cur_tok["token"]
+            unary = self._parse_unary()
+            self.intcode.append({"code_kind": "CODE_BIOP", "scope": self.scope.curid(), "label": "", "code": reduction["token"] + " = " + reduction["token"] + ' ' + op + ' ' + unary["token"]})
+
+        return reduction
 
     def _parse_unary(self):
         if self.next_tok["tok_kind"] == "TOK_BANG" or self.next_tok["tok_kind"] == "TOK_MINUS":
@@ -345,7 +364,8 @@ class Parser:
             op = self.cur_tok["token"]
             unary = self._parse_unary()
             tmpvar = next(self.tmpvar_generator)
-            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"])
+            self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"], self.local_var_stack_offset)
+            self.local_var_stack_offset -= const.INT_SIZE
             self.intcode.append({"code_kind": "CODE_UNARY", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + op + ' ' + unary["token"]})
             return tmpvar
 
@@ -389,7 +409,11 @@ class Parser:
                 self.intcode.append({"code_kind": "CODE_FUNCALL", "scope": self.scope.curid(), "label": "", "code": funcall_code})
 
                 # C functions put retval on %eax register
-                return {"linenum": -1, "token": "%eax", "tok_kind": "TOK_REGISTER"}
+                tmpvar = next(self.tmpvar_generator)
+                self.vartable.reg_var(self.scope.curid(), self.scope.parent_of(self.scope.curid()), tmpvar["token"], self.local_var_stack_offset)
+                self.local_var_stack_offset -= const.INT_SIZE
+                self.intcode.append({"code_kind": "CODE_EQUALITY", "scope": self.scope.curid(), "label": "", "code": tmpvar["token"] + " = " + "%eax"})
+                return tmpvar
 
             else:
                 # single variable

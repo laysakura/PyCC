@@ -10,4 +10,4 @@ if __name__ == "__main__":
         print(line["label"] + '\t' + line["code"] + "\t\tScope:" + str(line["scope"]))
 
     for svlist in vartable.svlists:
-        print(svlist)
+        sys.stderr.write(str(svlist) + '\n')

@@ -18,9 +18,9 @@ benchmark()
     gcc -o ${base}.gcc ${input} C0main.c
     ./${base}.gcc $@ | tee ${base}.gcc.out
 
-    echo "=== gcc -O3 ===" 1>&2
-    gcc -O3 -o ${base}.gccO3 ${input} C0main.c    
-    ./${base}.gccO3 $@ | tee ${base}.gccO3.out
+    # echo "=== gcc -O3 ===" 1>&2
+    # gcc -O3 -o ${base}.gccO3 ${input} C0main.c    
+    # ./${base}.gccO3 $@ | tee ${base}.gccO3.out
 
     echo "=== cogen ===" 1>&2
     ./cogen ${input} > ${base}.s
@@ -37,11 +37,11 @@ benchmark()
     echo "" 1>&2
 }
 
+benchmark pi.c 100000000 1000 1
 benchmark fib.c 40
 benchmark prime.c 10000000
-benchmark prime5.c 10000000
 benchmark ackermann.c 3 13
-benchmark pi.c 100000000 1000 1
+benchmark prime5.c 10000000
 
 # rm *.$ext
 # rm $ext.s

@@ -53,25 +53,23 @@ def _movl(_from, to, vartable, scope):
     return asm
 
 def _cmpl(lh, rh, vartable, scope):
-    # in 'cmpl lh, rh', when:
+    # 'lh (<|>|<=|>=|==|!=) rh' will be translated into
+    # 'cmpl rh lh'
+    #
+    # in 'cmpl rh, lh', when:
     # * both 'lh' and 'rh' are stack place
-    # * 'rh' is immediate
+    # * 'lh' is immediate
     # gas raises an error
 
     lh = vartable.place_of(lh, scope)
     rh = vartable.place_of(rh, scope)
 
     asm = []
-    if common.isimm(lh) and common.isimm(rh):
-        asm.append(_movl(rh, "%eax"))
-        asm.append("\tcmpl\t" + lh + ", %eax")
-    elif (not common.isimm(lh)) and common.isimm(rh):
-        asm.append("\tcmpl\t" + rh + ", " + vartable.place_of(lh, scope))
-    elif common.isstack(lh) and common.isstack(rh):
-        asm.append(_movl(rh, "%eax", vartable, scope))
-        asm.append("\tcmpl\t" + lh + ", %eax")
+    if common.isreg(lh):
+        asm.append("\tcmpl\t" + rh + ", " + lh)
     else:
-        asm.append("\tcmpl\t" + vartable.place_of(lh, scope) + ", " + vartable.place_of(rh, scope))
+        asm.append(_movl(lh, "%eax", vartable, scope))
+        asm.append("\tcmpl\t" + rh + ", %eax")
 
     return asm
 
@@ -193,6 +191,7 @@ def _reml(_from, to, vartable, scope):
     # fill %edx by %eax and shift right before calculating remnant
     _from = vartable.place_of(_from, scope)
     to = vartable.place_of(to, scope)
+
     asm = []
     asm.append(_movl(to, "%eax", vartable, scope))
     asm.append(_movl("%eax", "%edx", vartable, scope))
@@ -291,7 +290,7 @@ def _gen_label(intcode, vartable):
     return asm
 
 def _gen_biop(intcode, vartable):
-    # '.t = a [+-*/%] b'   where .t != a and .t != b
+    # '.t = a [+-*/%] b'
     biop_expr = intcode["code"].split()
     lh, rh1, op, rh2 = biop_expr[0], biop_expr[2], biop_expr[3], biop_expr[4]
 

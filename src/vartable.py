@@ -5,10 +5,12 @@ class Vartable:
     def __init__(self):
         self.svlists = []
         # 'svlist' is like this:
-        # {"scope": 3, "parent_scope": 2, "child_scopes": [4,6], "vars": [ {"id": ".BANPEI", "stack": 0}, {"id": "v", "stack": -4}, ...] }
+        # {"scope": 3, "parent_scope": 2, "child_scopes": [4,6], "vars": [ {"id": "v", "stack": -4}, ...] }
         # {"scope": 1, "parent_scope": None, "child_scopes": [3], "vars": [ ... {"id": "arg1", "stack": 8}, {"id": ".BANPEI", "stack": 0} ]}
         # Note that scope with args never has local vars
         # (since function-definition has a single scope)
+
+        self.stack_size_refby_parser = 0
 
     def _find_svlist(self, scope):
         def find(svlists):
@@ -21,23 +23,25 @@ class Vartable:
 
         return find(self.svlists)
 
-    def _add_var_to(self, svlist, var):
-        svlist["vars"].append( {"id": var, "stack": svlist["vars"][len(svlist["vars"]) - 1]["stack"] - const.INT_SIZE} )
+    def _add_var_to(self, svlist, var, next_stack):
+        svlist["vars"].append( {"id": var, "stack": next_stack} )
 
     def _add_arg_to(self, svlist, arg):
-        svlist["vars"].insert(0, {"id": arg, "stack": svlist["vars"][0]["stack"] + const.INT_SIZE} )
+        if svlist["vars"] == []:
+            svlist["vars"].insert(0, {"id": arg, "stack": const.ARG_OFFSET_FROM_EBP} )
+        else:
+            svlist["vars"].insert(0, {"id": arg, "stack": svlist["vars"][0]["stack"] + const.INT_SIZE} )
 
     def new_svlist(self, scope, parent_scope):
         if parent_scope is not None:
             self._find_svlist(parent_scope)["child_scopes"].append(scope)
-        # See self._add_var_to() and find why I put '.BANPEI'
-        self.svlists.append({"scope": scope, "parent_scope": parent_scope, "child_scopes": [], "vars": [ {"id": ".BANPEI", "stack": const.ARG_OFFSET_FROM_EBP - const.INT_SIZE}, {"id": ".BANPEI", "stack": const.LOCAL_VAR_OFFSET_FROM_EBP + const.INT_SIZE} ]})
+        self.svlists.append({"scope": scope, "parent_scope": parent_scope, "child_scopes": [], "vars": []})
         return self.svlists[len(self.svlists) - 1]
 
-    def reg_var(self, scope, parent_scope, var):
+    def reg_var(self, scope, parent_scope, var, next_stack):
         svlist = self._find_svlist(scope)
         if svlist is not None:
-            self._add_var_to(svlist, var)
+            self._add_var_to(svlist, var, next_stack)
         else:
             new_svlist = self.new_svlist(scope, parent_scope)
             self._add_var_to(new_svlist, var)
@@ -96,11 +100,16 @@ class Vartable:
             return self._stack_of(var, scope)
 
     def stack_size(self, scope):
+        # size = num of ALL_VARS(EXCLUDING ARGS) * INT_SIZE
+
         if scope is None:
             return 0
 
         svlist = self._find_svlist(scope)
-        size = abs(svlist["vars"][ len(svlist["vars"]) - 1 ]["stack"])
+        if svlist["vars"] == [] or svlist["vars"][0]["stack"] > const.LOCAL_VAR_OFFSET_FROM_EBP:
+            size = 0
+        else:
+            size = len(svlist["vars"]) * const.INT_SIZE
 
         children = self._find_svlist(scope)["child_scopes"]
         for child in children:
